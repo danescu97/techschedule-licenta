@@ -1,0 +1,987 @@
+--- PAGE 1 ---
+Te c h S c h e d u l e  —  S p e c i f i c ație Completă pentru Vibe
+Coding
+Scop: Aplicație web full-stack pentru programarea intervențiilor tehnice (reparații,
+instalări, mentenanță), inspirată din fluxul eMag Service. Destinată prezentării ca lucrare
+de licență.
+1. Viziune Generală
+TechSchedule este o platformă care conectează clienții care au nevoie de intervenții tehnice
+(reparații electrocasnice, IT, instalații, climatizare etc.) cu tehnicieni specializați. Clientul
+programează o intervenție în câțiva pași simpli, tehnicianul primește task-ul în dashboard-ul
+lui, iar adminul vede totul dintr-un panou centralizat cu statistici.
+Referință UI/UX principală: Pagina de servicii și fluxul de checkout de pe eMag.ro —
+header cu search, carduri categorii, stepper de programare cu 4 pași, pagina “Contul meu”
+cu tab-uri, status vizual cu linie de progres.
+2. Stack Tehnologic
+Frontend
+React 18 cu Vite ca build tool
+Tailwind CSS pentru stilizare
+shadcn/ui pentru componente UI (Button, Card, Dialog, Badge, Tabs, Calendar etc.)
+React Router v6 pentru navigare
+Zustand pentru state management global (user, cart-like appointment flow)
+React Query (TanStack Query) pentru fetch și cache date de la API
+React Hook Form + Zod pentru validare formulare
+date-fns pentru manipulare date calendaristice
+--- PAGE 2 ---
+Lucide React pentru iconițe
+Backend
+Python 3.11+
+Django 5 ca framework principal
+Django REST Framework (DRF) pentru API REST
+SimpleJWT pentru autentificare JWT (access token + refresh token)
+django-cors-headers pentru CORS cu frontul React
+Celery + Redis pentru task-uri asincrone (emailuri, reminder-uri)
+drf-spectacular pentru documentație Swagger automată
+Pillow pentru procesare imagini (upload poze intervenție)
+python-decouple pentru variabile de mediu
+Bază de Date
+PostgreSQL 15 (local cu pgAdmin, sau Railway în cloud)
+Email
+SendGrid API (sau SMTP Gmail pentru dev)
+Deploy
+Vercel — frontend React
+Railway — backend Django + PostgreSQL + Redis
+Dev Tools
+ESLint + Prettier pentru frontend
+Black + flake8 pentru backend
+Git cu branch-uri pe feature
+3. Structura Proiectului
+techschedule/
+--- PAGE 3 ---
+├── backend/                        # Django project
+│   ├── config/                     # Settings, URLs principale, WSGI/ASGI
+│   │   ├── settings/
+│   │   │   ├── base.py             # Setări comune
+│   │   │   ├── development.py      # Override pentru dev (DEBUG=True, SQLite opțional)
+│   │   │   └── production.py       # Override pentru prod (PostgreSQL, SendGrid)
+│   │   ├── urls.py                 # URL router principal
+│   │   ├── celery.py               # Configurare Celery
+│   │   └── wsgi.py
+│   ├── apps/
+│   │   ├── users/                  # Autentificare, profiluri, roluri
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   ├── urls.py
+│   │   │   └── tasks.py            # Email-uri async
+│   │   ├── services/               # Categorii și servicii oferite
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── urls.py
+│   │   ├── appointments/           # Programări, statusuri, timeline
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   ├── urls.py
+│   │   │   └── tasks.py            # Reminder-uri automate
+│   │   ├── technicians/            # Profiluri tehnicieni, disponibilitate
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── urls.py
+│   │   ├── reviews/                # Rating și recenzii
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── urls.py
+│   │   ├── notifications/          # Notificări in-app
+│   │   │   ├── models.py
+│   │   │   ├── serializers.py
+│   │   │   ├── views.py
+│   │   │   └── urls.py
+│   │   └── analytics/              # Date pentru dashboard admin
+│   │       ├── views.py
+│   │       └── urls.py
+│   ├── requirements.txt
+│   ├── .env.example
+--- PAGE 4 ---
+│   └── manage.py
+│
+└── frontend/                       # React + Vite project
+    ├── src/
+    │   ├── api/                    # Funcții fetch către backend
+    │   │   ├── auth.js
+    │   │   ├── appointments.js
+    │   │   ├── services.js
+    │   │   ├── technicians.js
+    │   │   ├── reviews.js
+    │   │   └── notifications.js
+    │   ├── components/             # Componente reutilizabile
+    │   │   ├── ui/                 # shadcn/ui components (auto-generate)
+    │   │   ├── layout/
+    │   │   │   ├── Header.jsx
+    │   │   │   ├── Footer.jsx
+    │   │   │   ├── Sidebar.jsx     # Pentru dashboard-uri
+    │   │   │   └── Layout.jsx      # Wrapper pagini
+    │   │   ├── appointments/
+    │   │   │   ├── AppointmentCard.jsx
+    │   │   │   ├── AppointmentTimeline.jsx
+    │   │   │   ├── BookingSteps/
+    │   │   │   │   ├── Step1Service.jsx
+    │   │   │   │   ├── Step2Location.jsx
+    │   │   │   │   ├── Step3DateTime.jsx
+    │   │   │   │   └── Step4Confirm.jsx
+    │   │   │   └── StatusBadge.jsx
+    │   │   ├── services/
+    │   │   │   ├── ServiceCard.jsx
+    │   │   │   └── CategoryCard.jsx
+    │   │   ├── reviews/
+    │   │   │   ├── StarRating.jsx
+    │   │   │   └── ReviewCard.jsx
+    │   │   └── notifications/
+    │   │       └── NotificationDropdown.jsx
+    │   ├── pages/
+    │   │   ├── public/             # Pagini accesibile fără autentificare
+    │   │   │   ├── HomePage.jsx
+    │   │   │   ├── ServicesPage.jsx
+    │   │   │   ├── ServiceDetailPage.jsx
+    │   │   │   ├── LoginPage.jsx
+    │   │   │   └── RegisterPage.jsx
+    │   │   ├── client/             # Pagini pentru rolul CLIENT
+    │   │   │   ├── ClientDashboard.jsx
+    │   │   │   ├── BookingPage.jsx       # Stepper cu 4 pași
+    │   │   │   ├── MyAppointments.jsx
+    │   │   │   ├── AppointmentDetail.jsx
+--- PAGE 5 ---
+4. Modele Bază de Date (Django)
+users app
+    │   │   │   └── ProfilePage.jsx
+    │   │   ├── technician/         # Pagini pentru rolul TECHNICIAN
+    │   │   │   ├── TechnicianDashboard.jsx
+    │   │   │   ├── MyTasks.jsx
+    │   │   │   ├── TaskDetail.jsx
+    │   │   │   └── InterventionReport.jsx
+    │   │   └── admin/              # Pagini pentru rolul ADMIN
+    │   │       ├── AdminDashboard.jsx
+    │   │       ├── ManageUsers.jsx
+    │   │       ├── ManageTechnicians.jsx
+    │   │       ├── ManageServices.jsx
+    │   │       └── Analytics.jsx
+    │   ├── store/                  # Zustand stores
+    │   │   ├── authStore.js        # User curent, tokens
+    │   │   └── bookingStore.js     # State temporar pentru fluxul de programare
+    │   ├── hooks/                  # Custom hooks
+    │   │   ├── useAuth.js
+    │   │   ├── useAppointments.js
+    │   │   └── useNotifications.js
+    │   ├── utils/
+    │   │   ├── axiosInstance.js    # Axios cu interceptor JWT
+    │   │   ├── constants.js        # Status-uri, roluri, culori badge
+    │   │   └── formatters.js       # Formatare date, prețuri, durate
+    │   ├── routes/
+    │   │   ├── ProtectedRoute.jsx  # Redirect dacă nu ești autentificat
+    │   │   └── RoleRoute.jsx       # Redirect dacă nu ai rolul cerut
+    │   ├── App.jsx
+    │   └── main.jsx
+    ├── index.html
+    ├── vite.config.js
+    ├── tailwind.config.js
+    └── package.json
+# apps/users/models.py
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+class User(AbstractUser):
+--- PAGE 6 ---
+services app
+    """
+    User extins cu rol și telefon.
+    Rolurile determină ce dashboard vede userul după login.
+    """
+    class Role(models.TextChoices):
+        CLIENT = 'client', 'Client'
+        TECHNICIAN = 'technician', 'Technician'
+        ADMIN = 'admin', 'Admin'
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15, blank=True)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.CLIENT)
+    profile_photo = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.role})"
+class Address(models.Model):
+    """
+    Adresele salvate ale unui client.
+    Un client poate salva mai multe adrese (acasă, birou etc.)
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    label = models.CharField(max_length=50, default='Acasă')  # ex: "Acasă", "Birou"
+    street = models.CharField(max_length=200)
+    city = models.CharField(max_length=100)
+    county = models.CharField(max_length=100)
+    zip_code = models.CharField(max_length=10, blank=True)
+    is_default = models.BooleanField(default=False)
+    def __str__(self):
+        return f"{self.label} — {self.street}, {self.city}"
+# apps/services/models.py
+from django.db import models
+class ServiceCategory(models.Model):
+    """
+--- PAGE 7 ---
+technicians app
+    Categorii mari de servicii: Electrocasnice, IT, Instalații etc.
+    Afișate ca carduri pe homepage, similar cu categoriile eMag.
+    """
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50)       # Numele iconiței Lucide (ex: 'Wrench')
+    color = models.CharField(max_length=20, default='#2563eb')  # Culoare card
+    is_active = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)        # Ordinea afișării
+    class Meta:
+        ordering = ['order']
+        verbose_name_plural = 'Service Categories'
+    def __str__(self):
+        return self.name
+class Service(models.Model):
+    """
+    Serviciu specific din cadrul unei categorii.
+    Ex: "Reparare mașină de spălat" din categoria "Electrocasnice"
+    """
+    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name='services')
+    name = models.CharField(max_length=150)
+    description = models.TextField()
+    duration_min = models.IntegerField(default=60)          # Durata estimată în minute
+    base_price = models.DecimalField(max_digits=8, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    def __str__(self):
+        return f"{self.category.name} — {self.name}"
+# apps/technicians/models.py
+from django.db import models
+from apps.users.models import User
+from apps.services.models import ServiceCategory
+class Technician(models.Model):
+    """
+    Profilul extins al unui tehnician.
+    Un user cu role='technician' are asociat un profil Technician.
+    """
+--- PAGE 8 ---
+appointments app
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='technician_profile')
+    specialties = models.ManyToManyField(ServiceCategory, blank=True)
+    bio = models.TextField(blank=True)
+    zone = models.CharField(max_length=100)      # Zona geografică (ex: "București Sector 2")
+    rating = models.FloatField(default=0.0)      # Calculat automat din review-uri
+    total_reviews = models.IntegerField(default=0)
+    is_available = models.BooleanField(default=True)
+    def __str__(self):
+        return f"Tehnician: {self.user.get_full_name()}"
+class TechnicianSchedule(models.Model):
+    """
+    Programul de lucru al tehnicianului pe zile ale săptămânii.
+    Se folosește pentru a genera sloturile disponibile în calendar.
+    """
+    class DayOfWeek(models.IntegerChoices):
+        MONDAY = 0, 'Luni'
+        TUESDAY = 1, 'Marți'
+        WEDNESDAY = 2, 'Miercuri'
+        THURSDAY = 3, 'Joi'
+        FRIDAY = 4, 'Vineri'
+        SATURDAY = 5, 'Sâmbătă'
+        SUNDAY = 6, 'Duminică'
+    technician = models.ForeignKey(Technician, on_delete=models.CASCADE, related_name='schedule')
+    day_of_week = models.IntegerField(choices=DayOfWeek.choices)
+    start_time = models.TimeField()     # ex: 08:00
+    end_time = models.TimeField()       # ex: 18:00
+    is_working = models.BooleanField(default=True)
+    class Meta:
+        unique_together = ['technician', 'day_of_week']
+# apps/appointments/models.py
+from django.db import models
+from apps.users.models import User, Address
+from apps.services.models import Service
+from apps.technicians.models import Technician
+class Appointment(models.Model):
+    """
+--- PAGE 9 ---
+    Programarea unei intervenții tehnice.
+    Aceasta este entitatea centrală a întregii aplicații.
+    """
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'În așteptare'           # Creat, neconfirmat încă
+        CONFIRMED = 'confirmed', 'Confirmat'           # Tehnicianul a acceptat
+        IN_PROGRESS = 'in_progress', 'În lucru'        # Tehnicianul a ajuns
+        COMPLETED = 'completed', 'Finalizat'           # Intervenție terminată
+        CANCELLED = 'cancelled', 'Anulat'             # Anulat de client/admin
+        FAILED = 'failed', 'Nerealizat'               # Tehnicianul a raportat problemă
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')
+    technician = models.ForeignKey(Technician, on_delete=models.SET_NULL, null=True, blank=True, related_name='appointments')
+    service = models.ForeignKey(Service, on_delete=models.PROTECT)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Date și timp
+    scheduled_date = models.DateField()
+    time_slot_start = models.TimeField()    # ex: 10:00
+    time_slot_end = models.TimeField()      # ex: 12:00
+    # Status și tracking
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    
+    # Detalii problemă
+    problem_description = models.TextField()
+    estimated_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    final_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return f"#{self.id} — {self.service.name} ({self.client.get_full_name()})"
+class AppointmentPhoto(models.Model):
+    """
+    Poze atașate de client la creare sau de tehnician la finalizare.
+    """
+    class PhotoType(models.TextChoices):
+--- PAGE 10 ---
+reviews app
+        CLIENT_UPLOAD = 'client', 'Încărcat de client'
+        TECHNICIAN_UPLOAD = 'technician', 'Încărcat de tehnician'
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='photos')
+    photo = models.ImageField(upload_to='appointments/%Y/%m/')
+    photo_type = models.CharField(max_length=20, choices=PhotoType.choices)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+class InterventionReport(models.Model):
+    """
+    Raportul tehnicianului după finalizarea intervenției.
+    Completat din dashboard-ul tehnicianului.
+    """
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='report')
+    technician = models.ForeignKey('technicians.Technician', on_delete=models.CASCADE)
+    diagnosis = models.TextField()           # Ce problemă a găsit
+    work_done = models.TextField()           # Ce a făcut efectiv
+    parts_replaced = models.TextField(blank=True)  # Piese înlocuite
+    is_resolved = models.BooleanField(default=True)
+    follow_up_needed = models.BooleanField(default=False)
+    follow_up_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+class AppointmentStatusLog(models.Model):
+    """
+    Istoric complet al schimbărilor de status.
+    Folosit pentru timeline-ul vizual din pagina de detalii programare.
+    """
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='status_logs')
+    old_status = models.CharField(max_length=20, blank=True)
+    new_status = models.CharField(max_length=20)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    note = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+# apps/reviews/models.py
+from django.db import models
+from apps.users.models import User
+from apps.appointments.models import Appointment
+from apps.technicians.models import Technician
+--- PAGE 11 ---
+notifications app
+class Review(models.Model):
+    """
+    Review lăsat de client după finalizarea programării.
+    Un client poate lăsa un singur review per programare.
+    """
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='review')
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    technician = models.ForeignKey(Technician, on_delete=models.CASCADE, related_name='reviews_received')
+    rating = models.IntegerField()       # 1-5 stele
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Recalculează rating-ul mediu al tehnicianului după fiecare review
+        reviews = Review.objects.filter(technician=self.technician)
+        avg = reviews.aggregate(models.Avg('rating'))['rating__avg'] or 0
+        self.technician.rating = round(avg, 1)
+        self.technician.total_reviews = reviews.count()
+        self.technician.save(update_fields=['rating', 'total_reviews'])
+# apps/notifications/models.py
+from django.db import models
+from apps.users.models import User
+class Notification(models.Model):
+    """
+    Notificări in-app afișate în dropdown-ul din header.
+    """
+    class NotifType(models.TextChoices):
+        APPOINTMENT_CONFIRMED = 'appointment_confirmed', 'Programare Confirmată'
+        APPOINTMENT_CANCELLED = 'appointment_cancelled', 'Programare Anulată'
+        TECHNICIAN_EN_ROUTE = 'technician_en_route', 'Tehnician în drum'
+        APPOINTMENT_COMPLETED = 'appointment_completed', 'Programare Finalizată'
+        REVIEW_REQUEST = 'review_request', 'Lasă un Review'
+        NEW_TASK = 'new_task', 'Task Nou Primit'
+        REMINDER = 'reminder', 'Reminder Programare'
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    type = models.CharField(max_length=40, choices=NotifType.choices)
+    title = models.CharField(max_length=100)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+--- PAGE 12 ---
+5. API Endpoints (DRF)
+Autentificare /api/auth/
+MethodEndpoint Descriere Auth
+necesar
+POST /api/auth/register/Înregistrare cont nou Nu
+POST /api/auth/login/ Login, returnează access +
+refresh token Nu
+POST /api/auth/token/refresh/Obține nou access token cu
+refresh token Nu
+POST /api/auth/logout/ Invalidare refresh token Da
+GET /api/auth/me/ Date cont curent Da
+PATCH/api/auth/me/ Update profil curent Da
+POST /api/auth/change-
+password/ Schimbare parolă Da
+POST /api/auth/reset-password/Trimitere email reset parolă Nu
+POST /api/auth/reset-
+password/confirm/
+Confirmare resetare cu token
+din email Nu
+Adrese /api/addresses/
+MethodEndpoint Descriere Auth
+necesar
+GET /api/addresses/ Lista adreselor meleClient
+    related_appointment_id = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['-created_at']
+--- PAGE 13 ---
+POST /api/addresses/ Adaugă adresă nouă Client
+PUT /api/addresses/{id}/ Editează adresă Client (own)
+DELETE/api/addresses/{id}/ Șterge adresă Client (own)
+PATCH/api/addresses/{id}/set-
+default/
+Setează ca adresă
+implicită Client (own)
+Servicii /api/services/
+MethodEndpoint Descriere Auth
+necesar
+GET /api/services/categories/Lista categorii activeNu
+GET /api/services/categories/{id}/Detalii categorie + servicii
+din ea Nu
+GET /api/services/ Lista tuturor serviciilorNu
+GET /api/services/{id}/ Detalii serviciu Nu
+POST /api/services/categories/Creare categorie Admin
+POST /api/services/ Creare serviciu Admin
+PUT /api/services/{id}/ Editare serviciu Admin
+DELETE/api/services/{id}/ Dezactivare serviciu Admin
+Tehnicieni /api/technicians/
+MethodEndpoint Descriere Auth
+necesar
+GET /api/technicians/
+Lista tehnicieni (cu
+filtrare după zonă/
+specialitate)
+Admin
+GET /api/technicians/{id}/ Profil tehnician
+public Da
+/api/technicians/{id}/availability/Sloturi disponibile
+--- PAGE 14 ---
+GET pentru o dată Da
+GET /api/technicians/me/ Profilul meu de
+tehnician Technician
+PATCH/api/technicians/me/ Update profil
+tehncian Technician
+GET /api/technicians/me/schedule/Programul meu de
+lucru Technician
+PUT /api/technicians/me/schedule/Update program de
+lucru Technician
+Programări /api/appointments/
+MethodEndpoint Descriere Auth necesar
+GET /api/appointments/
+Lista
+programărilor
+mele (filtrat
+după rol)
+Da
+POST /api/appointments/
+Creare
+programare
+nouă
+Client
+GET /api/appointments/{id}/ Detalii
+programareOwner/Technician/Admin
+PATCH/api/appointments/{id}/cancel/Anulare
+programareClient (own, >24h)
+PATCH/api/appointments/{id}/reschedule/ReprogramareClient (own)
+PATCH/api/appointments/{id}/confirm/
+Confirmare
+de către
+tehnician
+Technician
+PATCH/api/appointments/{id}/start/Marchează ca
+“În lucru” Technician
+PATCH/api/appointments/{id}/complete/Marchează ca
+finalizat Technician
+--- PAGE 15 ---
+POST /api/appointments/{id}/photos/Upload poze
+la programareClient/Technician
+POST /api/appointments/{id}/report/
+Adaugă
+raport
+intervenție
+Technician
+GET /api/appointments/{id}/status-log/Istoricul
+statusurilorOwner/Admin
+Review-uri /api/reviews/
+MethodEndpoint Descriere Auth
+necesar
+POST /api/reviews/ Lasă review (doar pt
+programări completate) Client
+GET /api/reviews/technician/{id}/Review-urile unui tehnicianNu
+GET /api/reviews/my/ Review-urile mele date Client
+Notificări /api/notifications/
+MethodEndpoint Descriere Auth
+necesar
+GET /api/notifications/ Toate notificările mele Da
+PATCH/api/notifications/{id}/read/Marchează ca citit Da
+PATCH/api/notifications/read-all/Marchează toate ca cititeDa
+GET /api/notifications/unread-
+count/
+Nr. notificări necitite
+(pentru badge) Da
+Analytics /api/analytics/ (doar Admin)
+MethodEndpoint Descriere
+GET /api/analytics/overview/KPIs: total programări, rata finalizare,
+venit estimat
+--- PAGE 16 ---
+GET /api/analytics/appointments-
+by-day/
+Nr. programări pe zi (pentru grafic linie)
+GET /api/analytics/appointments-
+by-status/ Distribuție statusuri (pentru grafic pie)
+GET /api/analytics/top-services/Top servicii după nr. programări
+GET /api/analytics/top-
+technicians/
+Top tehnicieni după rating și nr.
+intervenții
+6. Flux de Programare — Logică Detaliată
+Fluxul de programare este feature-ul central al aplicației. Se implementează ca un stepper
+cu 4 pași, cu state persistent în bookingStore (Zustand) pe toată durata fluxului.
+Pasul 1 — Selectare Serviciu
+Se afișează categoriile ca un grid de carduri (icon + nume + descriere scurtă)
+La click pe categorie, se expandează sau se navighează la o pagină cu serviciile din acea
+categorie
+La click pe un serviciu, se salvează selectedService în bookingStore și se trece la
+pasul 2
+Se afișează un sumar sticky în dreapta (desktop) sau sus (mobile) cu serviciul ales
+Pasul 2 — Selectare Locație
+Opțiunea A: client selectează una din adresele salvate (liste cu radio button)
+Opțiunea B: completează o adresă nouă (formular cu validare) cu opțiunea de a o salva
+La submit, se salvează selectedAddress în bookingStore și se trece la pasul 3
+Pasul 3 — Selectare Dată și Interval Orar
+Se afișează un calendar (componenta shadcn/ui Calendar)
+La click pe o dată disponibilă, se face un request la /api/technicians/available-
+slots/?date=&service_id=
+Backend-ul calculează ce tehnicieni sunt disponibili în ziua respectivă, bazat pe
+TechnicianSchedule și programările deja existente
+--- PAGE 17 ---
+Se afișează sloturile disponibile ca butoane (ex: “08:00 - 10:00” , “10:00 - 12:00” etc.)
+La click pe slot, se salvează selectedDate, selectedTimeSlot, assignedTechnician în
+store
+Logica de alocare automată (backend):
+# Pseudo-logica din views.py pentru available slots
+def get_available_slots(date, service_id):
+    service = Service.objects.get(id=service_id)
+    
+    # Găsim tehnicieni cu specialitatea potrivită
+    technicians = Technician.objects.filter(
+        specialties__services=service,
+        is_available=True,
+        schedule__day_of_week=date.weekday(),
+        schedule__is_working=True
+    )
+    
+    slots = []
+    for tech in technicians:
+        working_hours = tech.schedule.get(day_of_week=date.weekday())
+        booked_slots = Appointment.objects.filter(
+            technician=tech,
+            scheduled_date=date,
+            status__in=['pending', 'confirmed', 'in_progress']
+        ).values_list('time_slot_start', 'time_slot_end')
+        
+        # Generează sloturi de 2h din intervalul de lucru, excluzând cele ocupate
+        available = generate_free_slots(
+            working_hours.start_time,
+            working_hours.end_time,
+            service.duration_min,
+            booked_slots
+        )
+        
+        for slot in available:
+            slots.append({
+                'technician_id': tech.id,
+                'technician_name': tech.user.get_full_name(),
+                'start': slot['start'],
+                'end': slot['end']
+            })
+    
+    return slots
+--- PAGE 18 ---
+Pasul 4 — Confirmare
+Se afișează un sumar complet: serviciu ales, adresă, dată, interval orar, tehnician alocat,
+preț estimat
+Client completează o descriere a problemei (textarea obligatoriu)
+Opțional: upload poze (max 3, JPG/PNG, max 5MB fiecare)
+La submit se face POST la /api/appointments/ cu toate datele din bookingStore
+La succes: redirect la /client/appointments/{id} + email de confirmare trimis automat
+7. Componente Frontend — Detalii Cheie
+axiosInstance.js — Interceptor JWT
+// src/utils/axiosInstance.js
+import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+});
+// Attach token la fiecare request
+api.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+// Refresh automat dacă primim 401
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      const refreshed = await useAuthStore.getState().refreshToken();
+      if (refreshed) {
+        // Reface request-ul original cu noul token
+        return api(error.config);
+      } else {
+        // Token-ul de refresh a expirat, logout forțat
+--- PAGE 19 ---
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+export default api;
+authStore.js — Zustand
+// src/store/authStore.js
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+export const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      setAuth: (user, accessToken, refreshToken) =>
+        set({ user, accessToken, refreshToken }),
+      logout: () => set({ user: null, accessToken: null, refreshToken: null }),
+      refreshToken: async () => {
+        const refresh = get().refreshToken;
+        if (!refresh) return false;
+        try {
+          const res = await fetch('/api/auth/token/refresh/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            set({ accessToken: data.access });
+            return true;
+          }
+        } catch {}
+        return false;
+      },
+    }),
+--- PAGE 20 ---
+    { name: 'auth-storage' }
+  )
+);
+AppointmentTimeline.jsx — Status vizual
+8. Task-uri Celery (Notificări Automate)
+// Afișează progresul programării ca o linie cu pași, similar tracking comandă eMag
+const STEPS = [
+  { key: 'pending', label: 'Creat', icon: ClockIcon },
+  { key: 'confirmed', label: 'Confirmat', icon: CheckCircleIcon },
+  { key: 'in_progress', label: 'În lucru', icon: WrenchIcon },
+  { key: 'completed', label: 'Finalizat', icon: CheckBadgeIcon },
+];
+export function AppointmentTimeline({ status }) {
+  const currentIndex = STEPS.findIndex(s => s.key === status);
+  return (
+    <div className="flex items-center justify-between w-full">
+      {STEPS.map((step, index) => {
+        const isDone = index <= currentIndex;
+        const Icon = step.icon;
+        return (
+          <div key={step.key} className="flex flex-col items-center flex-1">
+            <div className={`rounded-full p-2 ${isDone ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+              <Icon className="w-5 h-5" />
+            </div>
+            <span className={`text-xs mt-1 ${isDone ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
+              {step.label}
+            </span>
+            {/* Linie de conectare între pași */}
+            {index < STEPS.length - 1 && (
+              <div className={`absolute h-0.5 w-full ${isDone ? 'bg-blue-600' : 'bg-gray-200'}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+# apps/appointments/tasks.py
+--- PAGE 21 ---
+from celery import shared_task
+from django.core.mail import send_mail
+from datetime import date, timedelta
+@shared_task
+def send_appointment_confirmation(appointment_id):
+    """Trimis imediat după crearea programării."""
+    from apps.appointments.models import Appointment
+    appt = Appointment.objects.get(id=appointment_id)
+    send_mail(
+        subject=f'Programare #{appt.id} confirmată — {appt.service.name}',
+        message=f"""
+        Salut {appt.client.first_name},
+        
+        Programarea ta a fost înregistrată cu succes!
+        
+        Serviciu: {appt.service.name}
+        Data: {appt.scheduled_date.strftime('%d %B %Y')}
+        Interval: {appt.time_slot_start.strftime('%H:%M')} - {appt.time_slot_end.strftime('%H:%M')}
+        Adresă: {appt.address.street}, {appt.address.city}
+        
+        Vei primi o confirmare când tehnicianul acceptă task-ul.
+        
+        TechSchedule
+        """,
+        from_email='noreply@techschedule.ro',
+        recipient_list=[appt.client.email],
+    )
+@shared_task
+def send_appointment_reminders():
+    """
+    Rulat zilnic la 09:00 prin Celery Beat.
+    Trimite reminder cu 24h înainte de programare.
+    """
+    from apps.appointments.models import Appointment
+    from apps.notifications.models import Notification
+    tomorrow = date.today() + timedelta(days=1)
+    appointments = Appointment.objects.filter(
+        scheduled_date=tomorrow,
+        status__in=['confirmed']
+    )
+    for appt in appointments:
+        # Email reminder
+        send_mail(
+            subject=f'Reminder: Programare mâine la {appt.time_slot_start.strftime("%H:%M")}',
+--- PAGE 22 ---
+9. Autentificare — Logica de Roluri
+Fiecare rol vede un dashboard diferit. Logica de redirect după login:
+// src/routes/ProtectedRoute.jsx
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+export function ProtectedRoute({ children, requiredRole }) {
+  const { user } = useAuthStore();
+  const location = useLocation();
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  if (requiredRole && user.role !== requiredRole) {
+    // Redirect la dashboard-ul corespunzător rolului real
+    const dashboardMap = {
+      client: '/client/dashboard',
+      technician: '/technician/dashboard',
+      admin: '/admin/dashboard',
+    };
+    return <Navigate to={dashboardMap[user.role]} replace />;
+  }
+  return children;
+}
+// src/pages/public/LoginPage.jsx — redirect post-login
+            message=f'Ai o programare mâine: {appt.service.name} la {appt.time_slot_start.strftime("%H:%M")}.',
+            from_email='noreply@techschedule.ro',
+            recipient_list=[appt.client.email],
+        )
+        # Notificare in-app
+        Notification.objects.create(
+            user=appt.client,
+            type='reminder',
+            title='Programare mâine',
+            message=f'Ai o programare mâine: {appt.service.name} la {appt.time_slot_start.strftime("%H:%M")}.',
+            related_appointment_id=appt.id
+        )
+--- PAGE 23 ---
+const handleLogin = async (data) => {
+  const response = await loginAPI(data);
+  setAuth(response.user, response.access, response.refresh);
+  
+  const redirectMap = {
+    client: '/client/dashboard',
+    technician: '/technician/dashboard',
+    admin: '/admin/dashboard',
+  };
+  navigate(redirectMap[response.user.role]);
+};
+10. Design System — Referință eMag
+Culori principale
+// tailwind.config.js
+colors: {
+  primary: {
+    50: '#eff6ff',
+    500: '#3b82f6',
+    600: '#2563eb',   // Albastrul principal (similar eMag)
+    700: '#1d4ed8',
+  },
+  success: '#16a34a',    // Verde pentru status "Finalizat"
+  warning: '#d97706',    // Portocaliu pentru "În lucru"
+  danger: '#dc2626',     // Roșu pentru "Anulat"
+}
+Status Badge Colors
+// src/utils/constants.js
+export const STATUS_CONFIG = {
+  pending:     { label: 'În așteptare', color: 'bg-yellow-100 text-yellow-800' },
+  confirmed:   { label: 'Confirmat',    color: 'bg-blue-100 text-blue-800' },
+  in_progress: { label: 'În lucru',     color: 'bg-orange-100 text-orange-800' },
+  completed:   { label: 'Finalizat',    color: 'bg-green-100 text-green-800' },
+  cancelled:   { label: 'Anulat',       color: 'bg-red-100 text-red-800' },
+  failed:      { label: 'Nerealizat',   color: 'bg-gray-100 text-gray-800' },
+};
+--- PAGE 24 ---
+Layout Header (inspirat eMag)
+Logo stânga + search bar centru + iconițe cont/notificări dreapta
+Sub header: breadcrumb (Acasă > Servicii > Electronice)
+Sticky header la scroll
+11. Pagini și Feature-uri per Rol
+Client
+Homepage — categorii servicii, CTA “Programează acum” , cum funcționează (3 pași
+ilustrați)
+ServicesPage — grid de categorii, filtru după județ
+ServiceDetailPage — detalii serviciu, preț estimat, recenzii, buton “Programează”
+BookingPage — stepper 4 pași (core feature)
+ClientDashboard — carduri sumar: programări active, ultimele notificări
+MyAppointments — taburi: Active / Finalizate / Anulate, fiecare ca listă de carduri cu
+status badge
+AppointmentDetail — timeline status, detalii complete, buton anulare/reprogramare,
+raportul tehnicianului, formular review (dacă status=completed și nu există deja review)
+ProfilePage — date personale, adrese salvate, schimbare parolă
+Technician
+TechnicianDashboard — statistici azi (nr. task-uri, ore lucrate), task-uri de azi în ordine
+cronologică
+MyTasks — taburi: Azi / Săptămâna asta / Istoric
+TaskDetail — date client, adresă pe hartă (Google Maps embed), descriere problemă,
+poze client, butoane de acțiune (Confirmat → Sosit → Finalizat)
+InterventionReport — formular: diagnostic, lucrări efectuate, piese înlocuite, upload
+poze, prețul final, resolved/follow-up
+Admin
+AdminDashboard — KPIs în carduri + grafic programări/zi (ultimele 30 zile) + grafic
+--- PAGE 25 ---
+distribuție statusuri
+ManageUsers — tabel cu toți userii, filtre, edit rol, dezactivare cont
+ManageTechnicians — tabel tehnicieni, adaugă, editează zone/specialități, toggle
+disponibilitate
+ManageServices — CRUD categorii și servicii, reordonare drag & drop
+Analytics — grafice detaliate, export CSV
+12. Variabile de Mediu
+Backend .env
+SECRET_KEY=django-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/techschedule
+# JWT
+JWT_ACCESS_TOKEN_LIFETIME_MINUTES=60
+JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
+# Email
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+# Celery
+CELERY_BROKER_URL=redis://localhost:6379/0
+# Media files
+MEDIA_ROOT=media/
+MEDIA_URL=/media/
+Frontend .env
+--- PAGE 26 ---
+VITE_API_URL=http://localhost:8000/api
+VITE_GOOGLE_MAPS_KEY=your-google-maps-key
+13. Comenzi de Setup Rapid
+Backend
+Frontend
+cd frontend
+npm install
+npm run dev
+14. requirements.txt (Backend)
+Django==5.0.4
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+drf-spectacular==0.27.2
+celery==5.3.6
+redis==5.0.3
+django-celery-beat==2.6.0
+Pillow==10.3.0
+psycopg2-binary==2.9.9
+python-decouple==3.8
+cd backend
+python -m venv venv
+source venv/bin/activate  # sau venv\Scripts\activate pe Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py loaddata fixtures/initial_data.json  # categorii și servicii demo
+python manage.py runserver
+# Într-un alt terminal:
+celery -A config worker --loglevel=info
+celery -A config beat --loglevel=info
+--- PAGE 27 ---
+sendgrid==6.11.0
+django-filter==24.2
+15. package.json dependencies (Frontend)
+{
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.23.0",
+    "axios": "^1.7.0",
+    "@tanstack/react-query": "^5.40.0",
+    "zustand": "^4.5.2",
+    "react-hook-form": "^7.51.4",
+    "zod": "^3.23.8",
+    "@hookform/resolvers": "^3.6.0",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.383.0",
+    "recharts": "^2.12.7",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^5.3.0",
+    "tailwindcss": "^3.4.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "eslint": "^9.4.0"
+  }
+}
+16. Fixture pentru Date Demo
+// backend/fixtures/initial_data.json
+[
+  {"model": "services.servicecategory", "pk": 1, "fields": {"name": "Electrocasnice", "icon": "WashingMachine", "color": "#2563eb", "order": 1, "is_active": true}},
+  {"model": "services.servicecategory", "pk": 2, "fields": {"name": "IT & Telefonie", "icon": "Monitor", "color": "#7c3aed", "order": 2, "is_active": true}},
+  {"model": "services.servicecategory", "pk": 3, "fields": {"name": "Instalații Sanitare", "icon": "Droplets", "color": "#0891b2", "order": 3, "is_active": true}},
+  {"model": "services.servicecategory", "pk": 4, "fields": {"name": "Climatizare", "icon": "Wind", "color": "#059669", "order": 4, "is_active": true}},
+  {"model": "services.servicecategory", "pk": 5, "fields": {"name": "Electricitate", "icon": "Zap", "color": "#d97706", "order": 5, "is_active": true}},
+--- PAGE 28 ---
+Specificație generată pentru proiect de licență — TechSchedule v1.0 Stack: React 18 + Vite
++ Tailwind CSS | Django 5 + DRF + PostgreSQL | Celery + Redis
+  
+  {"model": "services.service", "pk": 1, "fields": {"category": 1, "name": "Reparare mașină de spălat", "description": "Diagnoză și reparare defecțiuni mașini de spălat rufe orice brand.", "duration_min": 90, "base_price": "150.00", "is_active": true}},
+  {"model": "services.service", "pk": 2, "fields": {"category": 1, "name": "Reparare frigider", "description": "Reparare compresor, termostat, garnituri, sistem de răcire.", "duration_min": 120, "base_price": "180.00", "is_active": true}},
+  {"model": "services.service", "pk": 3, "fields": {"category": 2, "name": "Reparare laptop", "description": "Diagnoză software/hardware, înlocuire componente, curățare.", "duration_min": 60, "base_price": "100.00", "is_active": true}},
+  {"model": "services.service", "pk": 4, "fields": {"category": 3, "name": "Reparare scurgeri", "description": "Identificare și remediere scurgeri conducte, robineți, sifoane.", "duration_min": 60, "base_price": "120.00", "is_active": true}},
+  {"model": "services.service", "pk": 5, "fields": {"category": 4, "name": "Instalare climatizor", "description": "Instalare completă unitate internă + externă, inclusiv instalație frigorifică.", "duration_min": 180, "base_price": "400.00", "is_active": true}}
+]
