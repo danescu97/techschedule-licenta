@@ -18,6 +18,6 @@ end tell'
 echo "Serviciile se deschid in ferestre de Terminal separate."
 echo "Aplicatia va fi disponibila la http://localhost:5173"
 
-echo "Deschidem browser-ul..."
+echo "Se deschide browser-ul automat..."
 sleep 3
 open "http://localhost:5173"
