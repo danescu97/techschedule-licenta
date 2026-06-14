@@ -36,13 +36,13 @@ const DashboardRouter = () => {
 };
 
 function App() {
-  const { checkAuth, isLoading } = useAuthStore();
+  const { checkAuth, isCheckingAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  if (isLoading) {
+  if (isCheckingAuth) {
     return <div className="min-h-screen flex items-center justify-center">Se încarcă...</div>;
   }
 

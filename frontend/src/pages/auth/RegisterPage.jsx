@@ -44,29 +44,37 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Creează un cont
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            sau{' '}
-            <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
-              intră în contul tău
-            </Link>
-          </p>
-        </div>
-        
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          {authError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm text-center">
-              {typeof authError === 'object' ? JSON.stringify(authError) : authError}
+        {successMsg ? (
+          <div className="text-center py-8">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+              <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-          )}
-          {successMsg && (
-            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded text-sm text-center">
-              {successMsg}
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Cont creat cu succes!</h2>
+            <p className="text-gray-600">{successMsg}</p>
+          </div>
+        ) : (
+          <>
+            <div>
+              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Creează un cont
+              </h2>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                sau{' '}
+                <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
+                  intră în contul tău
+                </Link>
+              </p>
             </div>
-          )}
+            
+            <form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+              {authError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm text-center">
+                  {typeof authError === 'object' ? JSON.stringify(authError) : authError}
+                </div>
+              )}
+
           
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -150,6 +158,8 @@ const RegisterPage = () => {
             </button>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

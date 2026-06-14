@@ -4,7 +4,8 @@ import api from '../api/axios';
 const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
+  isCheckingAuth: true,
   error: null,
 
   login: async (email, password) => {
@@ -56,21 +57,21 @@ const useAuthStore = create((set) => ({
   },
 
   checkAuth: async () => {
-    set({ isLoading: true });
+    set({ isCheckingAuth: true });
     const token = localStorage.getItem('access_token');
     
     if (!token) {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isCheckingAuth: false });
       return;
     }
 
     try {
       const response = await api.get('/auth/me/');
-      set({ user: response.data, isAuthenticated: true, isLoading: false });
+      set({ user: response.data, isAuthenticated: true, isCheckingAuth: false });
     } catch (error) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isCheckingAuth: false });
     }
   }
 }));

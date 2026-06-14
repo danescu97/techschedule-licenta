@@ -34,7 +34,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = '__all__'
-        read_only_fields = ('client', 'status', 'created_at', 'updated_at', 'confirmed_at', 'completed_at', 'final_price')
+        read_only_fields = ('client', 'status', 'created_at', 'updated_at', 'confirmed_at', 'completed_at', 'final_price', 'time_slot_end')
 
     def create(self, validated_data):
         user = self.context['request'].user

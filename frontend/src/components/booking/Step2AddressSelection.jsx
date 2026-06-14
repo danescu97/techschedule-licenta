@@ -18,6 +18,7 @@ const addressSchema = z.object({
 const Step2AddressSelection = () => {
   const { setAddress, nextStep, prevStep, selectedAddressId } = useBookingStore();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const queryClient = useQueryClient();
 
   const { data: addresses, isLoading } = useQuery({
@@ -39,7 +40,9 @@ const Step2AddressSelection = () => {
 
   const addAddressMutation = useMutation({
     mutationFn: async (newAddress) => {
-      const response = await api.post('/auth/addresses/', newAddress);
+      // Ensure zip_code is sent as empty string if missing, to prevent backend errors
+      const payload = { ...newAddress, zip_code: newAddress.zip_code || '' };
+      const response = await api.post('/auth/addresses/', payload);
       return response.data;
     },
     onSuccess: (data) => {
@@ -47,10 +50,20 @@ const Step2AddressSelection = () => {
       setAddress(data.id);
       setShowAddForm(false);
       reset();
+      setErrorMsg('');
+    },
+    onError: (error) => {
+      const serverErr = error.response?.data;
+      if (serverErr && typeof serverErr === 'object') {
+        setErrorMsg(Object.values(serverErr).join(' '));
+      } else {
+        setErrorMsg('A apărut o eroare la salvarea adresei. Te rugăm să încerci din nou.');
+      }
     }
   });
 
   const onSubmit = (data) => {
+    setErrorMsg('');
     addAddressMutation.mutate({ ...data, is_default: false });
   };
 
@@ -114,6 +127,12 @@ const Step2AddressSelection = () => {
               <button type="button" onClick={() => setShowAddForm(false)} className="text-sm text-gray-500 hover:text-gray-700">Anulează</button>
             )}
           </div>
+          
+          {errorMsg && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm mb-4">
+              {errorMsg}
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">

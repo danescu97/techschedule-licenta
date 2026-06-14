@@ -69,8 +69,12 @@ const Step3DateTimeSelection = () => {
                   )}
                   <div>
                     <h4 className="font-bold text-gray-900">{tech.user?.first_name} {tech.user?.last_name}</h4>
-                    <div className="flex items-center text-xs text-yellow-500 font-medium">
-                      ★ {tech.rating.toFixed(1)} ({tech.total_reviews} recenzii)
+                    <div className="flex items-center text-xs font-medium">
+                      {tech.total_reviews === 0 ? (
+                        <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Nou (0 recenzii)</span>
+                      ) : (
+                        <span className="text-yellow-500">★ {tech.rating.toFixed(1)} ({tech.total_reviews} recenzii)</span>
+                      )}
                     </div>
                   </div>
                 </button>

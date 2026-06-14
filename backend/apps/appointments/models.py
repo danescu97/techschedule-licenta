@@ -30,7 +30,7 @@ class Appointment(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     
     # Detalii problemă
-    problem_description = models.TextField()
+    problem_description = models.TextField(blank=True)
     estimated_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     final_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
 

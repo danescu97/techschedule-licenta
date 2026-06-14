@@ -59,6 +59,14 @@ const Step4Confirmation = () => {
     onSuccess: (data) => {
       resetBooking();
       navigate('/dashboard', { state: { bookingSuccess: true } });
+    },
+    onError: (error) => {
+      console.error("Eroare la crearea programarii:", error.response?.data);
+      const serverErr = error.response?.data;
+      if (serverErr && typeof serverErr === 'object') {
+        const errorMsg = Object.values(serverErr).join(' ');
+        alert(`A apărut o eroare la salvare:\n${errorMsg}`);
+      }
     }
   });
 
@@ -68,8 +76,8 @@ const Step4Confirmation = () => {
       address: selectedAddressId,
       technician: selectedTechnicianId,
       scheduled_date: format(selectedDate, 'yyyy-MM-dd'),
-      scheduled_time: selectedTimeSlot,
-      description: description
+      time_slot_start: selectedTimeSlot,
+      problem_description: description || ''
     });
   };
 
@@ -131,7 +139,11 @@ const Step4Confirmation = () => {
             <div>
               <h4 className="text-sm font-semibold text-gray-500 uppercase">Tehnician Alocat</h4>
               <p className="font-bold text-gray-900">{tech?.user?.first_name} {tech?.user?.last_name}</p>
-              <p className="text-yellow-500 text-sm font-medium">★ {tech?.rating?.toFixed(1)} rating</p>
+              {tech?.total_reviews === 0 ? (
+                <p className="text-gray-500 text-sm font-medium">Nou (fără recenzii)</p>
+              ) : (
+                <p className="text-yellow-500 text-sm font-medium">★ {tech?.rating?.toFixed(1)} rating</p>
+              )}
             </div>
           </div>
         </div>

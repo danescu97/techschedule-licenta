@@ -47,10 +47,11 @@ class AddressSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def create(self, validated_data):
-        user = self.context['request'].user
+        user = validated_data.get('user', self.context['request'].user)
+        validated_data['user'] = user
         if validated_data.get('is_default'):
             Address.objects.filter(user=user).update(is_default=False)
-        return Address.objects.create(user=user, **validated_data)
+        return Address.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         if validated_data.get('is_default'):

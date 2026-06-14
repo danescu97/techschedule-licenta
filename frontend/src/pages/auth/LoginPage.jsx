@@ -14,7 +14,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, error: authError, isLoading } = useAuthStore();
-  
+  const [successMsg, setSuccessMsg] = useState('');
   const from = location.state?.from?.pathname || '/';
 
   const {
@@ -28,26 +28,41 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     const success = await login(data.email, data.password);
     if (success) {
-      navigate(from, { replace: true });
+      setSuccessMsg('Autentificare reușită! Te redirecționăm...');
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 1500);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Intră în cont
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            sau{' '}
-            <Link to="/register" className="font-medium text-primary hover:text-primary-dark">
-              creează un cont nou
-            </Link>
-          </p>
-        </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        {successMsg ? (
+          <div className="text-center py-8">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+              <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Succes!</h2>
+            <p className="text-gray-600">{successMsg}</p>
+          </div>
+        ) : (
+          <>
+            <div>
+              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Intră în cont
+              </h2>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                sau{' '}
+                <Link to="/register" className="font-medium text-primary hover:text-primary-dark">
+                  creează un cont nou
+                </Link>
+              </p>
+            </div>
+            
+            <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {authError && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm text-center">
               {authError}
@@ -90,6 +105,8 @@ const LoginPage = () => {
             </button>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );
